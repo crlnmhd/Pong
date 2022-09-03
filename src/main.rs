@@ -18,6 +18,7 @@ use panic_halt as _;
 
 use cortex_m_rt::ExceptionFrame;
 use cortex_m_rt::{entry, exception};
+use embedded_graphics::primitives::PrimitiveStyle;
 use embedded_graphics::{draw_target::DrawTarget, pixelcolor::Rgb565, prelude::*};
 
 use st7735_lcd::{Orientation, ST7735};
@@ -25,6 +26,7 @@ use st7735_lcd::{Orientation, ST7735};
 use hal::prelude::*;
 
 mod game;
+use game::game_object::*;
 
 #[entry]
 fn main() -> ! {
@@ -65,40 +67,59 @@ fn main() -> ! {
             polarity: Polarity::IdleLow,
             phase: Phase::CaptureOnFirstTransition,
         },
-        16.MHz().into(),
+        28.MHz().into(),
         &clocks,
     );
 
     let mut delay = cortex_m::delay::Delay::new(cp.SYST, clocks.hclk().to_Hz());
     //hal::timer::Timer::new(d&p.TIM2, &clocks);
 
-    let mut disp = ST7735::new(spi, dc, rst, true, false, 160, 128);
+    let x_pixels: u32 = 160;
+    let y_pixels: u32 = 128;
+
+    let mut disp = ST7735::new(spi, dc, rst, true, false, x_pixels, y_pixels);
     disp.init(&mut delay).unwrap();
     disp.set_orientation(&Orientation::Landscape).unwrap();
     disp.clear(Rgb565::BLACK).unwrap();
 
+    let mut pong: Game = GameBuilder::new(x_pixels, y_pixels)
+        .ball_radius(5)
+        .paddle_size(Size {
+            width: 10,
+            height: 40,
+        })
+        .build();
+    pong.set_right_paddle_position(Point { x: 10, y: 20 });
+    pong.set_left_paddle_position(Point { x: (50), y: 50 });
+
+    let mut x: i32 = 5;
+    let y: i32 = 50;
+
     loop {
-        disp.play(&mut tx, &mut rx)
+        disp.clear(Rgb565::BLACK).unwrap();
+        for shape in pong.get_content_to_display().into_iter() {
+            match shape {
+                ScreenObject::Rectangle(rectangle) => {
+                    rectangle
+                        .into_styled(PrimitiveStyle::with_fill(Rgb565::GREEN))
+                        .draw(&mut disp)
+                        .unwrap();
+                }
+                ScreenObject::Circle(circle) => {
+                    circle
+                        .into_styled(PrimitiveStyle::with_fill(Rgb565::BLACK))
+                        .draw(&mut disp)
+                        .unwrap();
+                    x += 5;
+                    x %= x_pixels as i32 - 5;
+                    x += 5;
+                    pong.set_ball_position(Point { x, y });
+                    circle
+                        .into_styled(PrimitiveStyle::with_fill(Rgb565::GREEN))
+                        .draw(&mut disp)
+                        .unwrap();
+                }
+            }
+        }
     }
-}
-
-trait PlayPong {
-    fn play(&self, tx: &mut Tx<USART2>, rx: &mut Rx<USART2>) -> ();
-}
-
-impl<SPI, DC, RST> PlayPong for ST7735<SPI, DC, RST>
-where
-    SPI: hal::hal::blocking::spi::Write<u8>,
-    DC: OutputPin,
-    RST: OutputPin,
-{
-    fn play(&self, tx: &mut Tx<USART2>, rx: &mut Rx<USART2>) -> () {
-        ()
-    }
-}
-
-#[exception]
-#[allow(non_snake_case)]
-unsafe fn HardFault(ef: &ExceptionFrame) -> ! {
-    panic!("{:#?}", ef);
 }
