@@ -27,6 +27,7 @@ use hal::prelude::*;
 
 mod game;
 use game::game_object::*;
+use game::input;
 
 #[entry]
 fn main() -> ! {
