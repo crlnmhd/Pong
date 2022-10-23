@@ -1,3 +1,4 @@
+use cortex_m_semihosting::hprintln;
 use stm32f4xx_hal::gpio::{Input, Pin};
 
 #[derive(Debug)]
