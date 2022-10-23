@@ -1,9 +1,3 @@
-struct Assert<const COND: bool> {}
-
-trait IsTrue {}
-
-impl IsTrue for Assert<true> {}
-
 use stm32f4xx_hal::{
     adc::{config::SampleTime, Adc},
     gpio::{Analog, Pin},
