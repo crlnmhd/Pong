@@ -3,14 +3,15 @@
 
 use cortex_m;
 
-use game::input::FourButtonSettup;
-use game::input::InputDirection;
+use cortex_m_semihosting::hprintln;
 use game::input::LeftRightPosition;
-use game::input::UserInteraction;
+use game::input::TwoUserInputs;
 use hal::hal::digital::v2::OutputPin;
+use hal::pac::ADC1;
 use hal::serial::config::WordLength;
 use stm32f4xx_hal as hal;
 
+use hal::adc::{config::AdcConfig, config::SampleTime, Adc};
 use hal::pac::USART2;
 use hal::serial;
 use hal::serial::Rx;
@@ -32,6 +33,7 @@ use hal::prelude::*;
 mod game;
 use game::game_object::*;
 use game::input;
+use input::UserInteraction;
 
 #[entry]
 fn main() -> ! {
@@ -62,7 +64,8 @@ fn main() -> ! {
     let miso = gpioa.pa6.into_alternate::<5>();
     let mosi = gpioa.pa7.into_alternate::<5>();
 
-    let rst = gpioa.pa1.into_push_pull_output();
+    let gpiob = dp.GPIOB.split();
+    let rst = gpiob.pb0.into_push_pull_output();
     let dc = gpioa.pa0.into_push_pull_output();
 
     let spi = hal::pac::SPI1::spi(
@@ -82,21 +85,14 @@ fn main() -> ! {
     let x_pixels: u32 = 160;
     let y_pixels: u32 = 128;
 
-    let gpiob = dp.GPIOB.split();
-
-    let left_up = gpiob.pb3.into_input();
-    let left_down = gpiob.pb5.into_input();
-    let right_up = gpiob.pb4.into_input();
-    let right_down = gpiob.pb10.into_input();
-
     let left_player_input = gpioa.pa4.into_analog();
-    let right_plater_input = gpiob.pb0.into_analog();
+    let right_player_input = gpioa.pa1.into_analog();
+    let mut adc1 = Adc::adc1(dp.ADC1, false, AdcConfig::default());
 
-    let user_input = FourButtonSettup {
-        left_up,
-        left_down,
-        right_up,
-        right_down,
+    let mut user_input = TwoUserInputs {
+        left_user: left_player_input,
+        right_user: right_player_input,
+        adc1,
     };
 
     let mut disp = ST7735::new(spi, dc, rst, true, false, x_pixels, y_pixels);
@@ -140,15 +136,12 @@ fn main() -> ! {
                 }
             }
         }
-        match user_input.get_user_input(LeftRightPosition::Right) {
-            InputDirection::Up => {
-                left_paddle_y -= 1;
-            }
-            InputDirection::Down => {
-                left_paddle_y += 1;
-            }
-            _ => {}
-        };
+
+        hprintln!(
+            "Analog read values:\n Left: {}, right: {}\n",
+            user_input.get_input_percentage(LeftRightPosition::Left),
+            user_input.get_input_percentage(LeftRightPosition::Right)
+        );
 
         left_paddle_y = (left_paddle_y + 10) % 100;
 

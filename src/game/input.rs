@@ -1,69 +1,48 @@
-use cortex_m_semihosting::hprintln;
-use stm32f4xx_hal::gpio::{Input, Pin};
+struct Assert<const COND: bool> {}
 
-#[derive(Debug)]
-pub enum InputDirection {
-    Stay,
-    Up,
-    Down,
-}
+trait IsTrue {}
+
+impl IsTrue for Assert<true> {}
+
+use stm32f4xx_hal::{
+    adc::{config::SampleTime, Adc},
+    gpio::{Analog, Pin},
+    hal::adc::Channel,
+    pac::ADC1,
+};
 
 pub enum LeftRightPosition {
     Left,
     Right,
 }
 
-pub struct FourButtonSettup<
-    const P1: char,
-    const P2: char,
-    const P3: char,
-    const P4: char,
-    const N1: u8,
-    const N2: u8,
-    const N3: u8,
-    const N4: u8,
-> {
-    pub left_up: Pin<P1, N1, Input>,
-    pub left_down: Pin<P2, N2, Input>,
-    pub right_up: Pin<P3, N3, Input>,
-    pub right_down: Pin<P4, N4, Input>,
+pub struct TwoUserInputs<const PL: char, const PR: char, const NL: u8, const NR: u8> {
+    pub left_user: Pin<PL, NL, Analog>,
+    pub right_user: Pin<PR, NR, Analog>,
+    pub adc1: Adc<ADC1>,
 }
 
 pub trait UserInteraction {
-    fn get_user_input(&self, user_position: LeftRightPosition) -> InputDirection;
+    fn get_input_percentage(&mut self, user_position: LeftRightPosition) -> u8;
 }
 
-impl<
-        const P1: char,
-        const P2: char,
-        const P3: char,
-        const P4: char,
-        const N1: u8,
-        const N2: u8,
-        const N3: u8,
-        const N4: u8,
-    > UserInteraction for FourButtonSettup<P1, P2, P3, P4, N1, N2, N3, N4>
+impl<const PL: char, const PR: char, const NL: u8, const NR: u8> UserInteraction
+    for TwoUserInputs<PL, PR, NL, NR>
+where
+    Pin<PL, NL, Analog>: Channel<ADC1, ID = u8>, // Pins must be capable on analog read by ADC1.
+    Pin<PR, NR, Analog>: Channel<ADC1, ID = u8>,
 {
-    fn get_user_input(&self, user_position: LeftRightPosition) -> InputDirection {
-        let up_button_pressed;
-        let down_botton_pressed;
-        match user_position {
-            LeftRightPosition::Left => {
-                up_button_pressed = self.left_up.is_high();
-                down_botton_pressed = self.left_down.is_high();
-            }
-            LeftRightPosition::Right => {
-                up_button_pressed = self.right_up.is_high();
-                down_botton_pressed = self.right_down.is_high();
-            }
+    fn get_input_percentage(&mut self, user_position: LeftRightPosition) -> u8 {
+        let sample_time = SampleTime::Cycles_480;
+        let sample = match user_position {
+            LeftRightPosition::Left => self.adc1.convert(&self.left_user, sample_time),
+            LeftRightPosition::Right => self.adc1.convert(&self.right_user, sample_time),
         };
+        let milivolts: u32 = self.adc1.sample_to_millivolts(sample).into();
+        let reference_voltage = self.adc1.reference_voltage();
+        let percentage = milivolts * 100 / reference_voltage;
 
-        hprintln!("Up: {}, down: {}", up_button_pressed, down_botton_pressed);
-
-        match (up_button_pressed, down_botton_pressed) {
-            (true, false) => InputDirection::Up,
-            (false, true) => InputDirection::Down,
-            (_, _) => InputDirection::Stay,
-        }
+        assert!(percentage <= 100, "Error reading analog input values");
+        percentage as u8
     }
 }
