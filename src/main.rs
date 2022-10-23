@@ -3,6 +3,10 @@
 
 use cortex_m;
 
+use game::input::FourButtonSettup;
+use game::input::InputDirection;
+use game::input::LeftRightPosition;
+use game::input::UserInteraction;
 use hal::hal::digital::v2::OutputPin;
 use hal::serial::config::WordLength;
 use stm32f4xx_hal as hal;
@@ -14,7 +18,7 @@ use hal::serial::Tx;
 use hal::spi::Mode;
 use hal::spi::Phase;
 use hal::spi::Polarity;
-use panic_halt as _;
+use panic_semihosting as _;
 
 use cortex_m_rt::ExceptionFrame;
 use cortex_m_rt::{entry, exception};
@@ -78,27 +82,90 @@ fn main() -> ! {
     let x_pixels: u32 = 160;
     let y_pixels: u32 = 128;
 
+    let gpiob = dp.GPIOB.split();
+
+    let left_up = gpiob.pb3.into_input();
+    let left_down = gpiob.pb5.into_input();
+    let right_up = gpiob.pb4.into_input();
+    let right_down = gpiob.pb10.into_input();
+
+    let left_player_input = gpioa.pa4.into_analog();
+    let right_plater_input = gpiob.pb0.into_analog();
+
+    let user_input = FourButtonSettup {
+        left_up,
+        left_down,
+        right_up,
+        right_down,
+    };
+
     let mut disp = ST7735::new(spi, dc, rst, true, false, x_pixels, y_pixels);
     disp.init(&mut delay).unwrap();
     disp.set_orientation(&Orientation::Landscape).unwrap();
     disp.clear(Rgb565::BLACK).unwrap();
 
     let mut pong: Game = GameBuilder::new(x_pixels, y_pixels)
-        .ball_radius(5)
+        .ball_radius(3)
         .paddle_size(Size {
-            width: 10,
+            width: 6,
             height: 40,
         })
         .build();
     pong.set_right_paddle_position(Point { x: 10, y: 20 });
-    pong.set_left_paddle_position(Point { x: (50), y: 50 });
+    let mut tmp_left_paddle_pos = Point { x: (50), y: (50) };
+    pong.set_left_paddle_position(tmp_left_paddle_pos);
 
     let mut x: i32 = 5;
     let y: i32 = 50;
 
+    let mut left_paddle_y = 0;
+
+    disp.clear(Rgb565::BLACK).unwrap();
     loop {
-        disp.clear(Rgb565::BLACK).unwrap();
-        for shape in pong.get_content_to_display().into_iter() {
+        // clear objects
+        for shape in pong.get_moved_content().into_iter() {
+            match shape {
+                ScreenObject::Rectangle(rectangle) => {
+                    rectangle
+                        .into_styled(PrimitiveStyle::with_fill(Rgb565::RED))
+                        .draw(&mut disp)
+                        .unwrap();
+                }
+                ScreenObject::Circle(circle) => {
+                    pong.set_ball_position(Point { x, y });
+                    circle
+                        .into_styled(PrimitiveStyle::with_fill(Rgb565::BLACK))
+                        .draw(&mut disp)
+                        .unwrap();
+                }
+            }
+        }
+        match user_input.get_user_input(LeftRightPosition::Right) {
+            InputDirection::Up => {
+                left_paddle_y -= 1;
+            }
+            InputDirection::Down => {
+                left_paddle_y += 1;
+            }
+            _ => {}
+        };
+
+        left_paddle_y = (left_paddle_y + 10) % 100;
+
+        pong.reset_position_update_indicators();
+        pong.set_left_paddle_position(Point {
+            x: tmp_left_paddle_pos.x,
+            y: (tmp_left_paddle_pos.y + left_paddle_y),
+        });
+
+        // update_ position
+        x += 1;
+        x %= x_pixels as i32 - 5;
+        x += 5;
+        pong.set_ball_position(Point { x, y });
+
+        // draw objects
+        for shape in pong.get_moved_content().into_iter() {
             match shape {
                 ScreenObject::Rectangle(rectangle) => {
                     rectangle
@@ -107,14 +174,6 @@ fn main() -> ! {
                         .unwrap();
                 }
                 ScreenObject::Circle(circle) => {
-                    circle
-                        .into_styled(PrimitiveStyle::with_fill(Rgb565::BLACK))
-                        .draw(&mut disp)
-                        .unwrap();
-                    x += 5;
-                    x %= x_pixels as i32 - 5;
-                    x += 5;
-                    pong.set_ball_position(Point { x, y });
                     circle
                         .into_styled(PrimitiveStyle::with_fill(Rgb565::GREEN))
                         .draw(&mut disp)
