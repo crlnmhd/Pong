@@ -198,7 +198,7 @@ impl Game {
     }
     pub fn set_left_paddle_position(&mut self, top_left_pos: Point) {
         // Fixme bounds check
-        if top_left_pos != top_left_pos {
+        if top_left_pos != self.left_paddle.top_left_pos {
             self.left_paddle.has_moved = true;
             self.left_paddle.top_left_pos = top_left_pos;
         }
