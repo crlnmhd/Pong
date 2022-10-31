@@ -1,0 +1,17 @@
+Pin mapping:
+
+STM Nucleo F411RE (board, ARM pin/port) to Adafruit ST7735 w/ SD card (SD card not used).
+
+
+Display   <->    Nucelo
+------------------------
+GND              GND
+VCC              5V
+Reset            A3/PB_0
+DC               A0/PA_0
+CARD_CS          -
+TFT_CS           5V (from display)
+MOSI             MOSI/D11/PA_7
+SCK              SCK/D13/PA_5
+MISO             -
+LITE             3V though resistors (440 Ohm)
