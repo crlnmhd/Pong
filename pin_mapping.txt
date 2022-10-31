@@ -15,3 +15,10 @@ MOSI             MOSI/D11/PA_7
 SCK              SCK/D13/PA_5
 MISO             -
 LITE             3V though resistors (440 Ohm)
+
+
+Controller <->  Nucleo
+----------------------
+VCC             IOREF
+GND             GND
+X               A1/PA_4
