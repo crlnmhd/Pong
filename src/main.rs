@@ -118,36 +118,37 @@ fn main() -> ! {
 
     let mut left_paddle_y = 0;
 
-    disp.clear(Rgb565::BLACK).unwrap();
     loop {
-        // clear objects
-        for shape in pong.get_moved_content().into_iter() {
+        disp.clear(Rgb565::BLACK).unwrap();
+        // re draw objects
+        for shape in pong.get_content_to_display().into_iter() {
             match shape {
                 ScreenObject::Rectangle(rectangle) => {
                     rectangle
-                        .into_styled(PrimitiveStyle::with_fill(Rgb565::RED))
+                        .into_styled(PrimitiveStyle::with_fill(Rgb565::YELLOW))
                         .draw(&mut disp)
                         .unwrap();
                 }
                 ScreenObject::Circle(circle) => {
-                    pong.set_ball_position(Point { x, y });
                     circle
-                        .into_styled(PrimitiveStyle::with_fill(Rgb565::BLACK))
+                        .into_styled(PrimitiveStyle::with_fill(Rgb565::GREEN))
                         .draw(&mut disp)
                         .unwrap();
                 }
             }
         }
-
-        hprintln!(
-            "Analog read values:\n Left: {}, right: {}\n",
-            user_input.get_input_percentage(LeftRightPosition::Left),
-            user_input.get_input_percentage(LeftRightPosition::Right)
-        );
-
-        left_paddle_y = (left_paddle_y + 10) % 100;
-
         pong.reset_position_update_indicators();
+
+        match user_input.get_input_direction(LeftRightPosition::Left) {
+            InpuDirection::Up => left_paddle_y += 5,
+            InpuDirection::Down => left_paddle_y -= 5,
+            _ => {}
+        };
+        if left_paddle_y < -100 {
+            left_paddle_y = -left_paddle_y;
+        }
+        left_paddle_y %= 200;
+
         pong.set_left_paddle_position(Point {
             x: tmp_left_paddle_pos.x,
             y: (tmp_left_paddle_pos.y + left_paddle_y),
@@ -158,23 +159,5 @@ fn main() -> ! {
         x %= x_pixels as i32 - 5;
         x += 5;
         pong.set_ball_position(Point { x, y });
-
-        // draw objects
-        for shape in pong.get_moved_content().into_iter() {
-            match shape {
-                ScreenObject::Rectangle(rectangle) => {
-                    rectangle
-                        .into_styled(PrimitiveStyle::with_fill(Rgb565::GREEN))
-                        .draw(&mut disp)
-                        .unwrap();
-                }
-                ScreenObject::Circle(circle) => {
-                    circle
-                        .into_styled(PrimitiveStyle::with_fill(Rgb565::GREEN))
-                        .draw(&mut disp)
-                        .unwrap();
-                }
-            }
-        }
     }
 }
