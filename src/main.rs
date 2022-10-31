@@ -11,6 +11,8 @@ use hal::pac::ADC1;
 use hal::serial::config::WordLength;
 use stm32f4xx_hal as hal;
 
+use game::input::InpuDirection;
+
 use hal::adc::{config::AdcConfig, config::SampleTime, Adc};
 use hal::pac::USART2;
 use hal::serial;

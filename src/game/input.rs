@@ -10,6 +10,12 @@ pub enum LeftRightPosition {
     Right,
 }
 
+pub enum InpuDirection {
+    Up,
+    Down,
+    Stay,
+}
+
 pub struct TwoUserInputs<const PL: char, const PR: char, const NL: u8, const NR: u8> {
     pub left_user: Pin<PL, NL, Analog>,
     pub right_user: Pin<PR, NR, Analog>,
@@ -17,11 +23,32 @@ pub struct TwoUserInputs<const PL: char, const PR: char, const NL: u8, const NR:
 }
 
 pub trait UserInteraction {
-    fn get_input_percentage(&mut self, user_position: LeftRightPosition) -> u8;
+    fn get_input_direction(&mut self, user_position: LeftRightPosition) -> InpuDirection;
 }
 
 impl<const PL: char, const PR: char, const NL: u8, const NR: u8> UserInteraction
     for TwoUserInputs<PL, PR, NL, NR>
+where
+    Pin<PL, NL, Analog>: Channel<ADC1, ID = u8>, // Pins must be capable on analog read by ADC1.
+    Pin<PR, NR, Analog>: Channel<ADC1, ID = u8>,
+{
+    fn get_input_direction(&mut self, user_position: LeftRightPosition) -> InpuDirection {
+        let input_percentage = self.get_input_percentage(user_position);
+        match input_percentage {
+            0..=39 => InpuDirection::Up,
+            40..=59 => InpuDirection::Stay,
+            60..=100 => InpuDirection::Down,
+            _ => {
+                panic!(
+                    "Error, input percentage: {}% not valid. Check connections.",
+                    input_percentage
+                )
+            }
+        }
+    }
+}
+
+impl<const PL: char, const PR: char, const NL: u8, const NR: u8> TwoUserInputs<PL, PR, NL, NR>
 where
     Pin<PL, NL, Analog>: Channel<ADC1, ID = u8>, // Pins must be capable on analog read by ADC1.
     Pin<PR, NR, Analog>: Channel<ADC1, ID = u8>,
