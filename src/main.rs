@@ -109,9 +109,7 @@ fn main() -> ! {
             height: 40,
         })
         .build();
-    pong.set_right_paddle_position(Point { x: 10, y: 20 });
-    let mut tmp_left_paddle_pos = Point { x: (50), y: (50) };
-    pong.set_left_paddle_position(tmp_left_paddle_pos);
+    pong.set_right_paddle_position(Point { x: 100, y: 0 });
 
     let mut x: i32 = 5;
     let y: i32 = 50;
@@ -150,8 +148,8 @@ fn main() -> ! {
         left_paddle_y %= 200;
 
         pong.set_left_paddle_position(Point {
-            x: tmp_left_paddle_pos.x,
-            y: (tmp_left_paddle_pos.y + left_paddle_y),
+            x: 0,
+            y: left_paddle_y,
         });
 
         // update_ position
