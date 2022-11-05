@@ -109,12 +109,13 @@ fn main() -> ! {
             height: 40,
         })
         .build();
-    pong.set_right_paddle_position(Point { x: 100, y: 0 });
 
-    let mut x: i32 = 5;
-    let y: i32 = 50;
+    let mut left_paddle_position = Point { x: 0, y: 0 };
+    let mut right_paddle_position = Point { x: 120, y: 0 };
+    let mut ball_position = Point { x: 0, y: 50 };
 
-    let mut left_paddle_y = 0;
+    pong.set_right_paddle_position(right_paddle_position);
+    pong.set_left_paddle_position(left_paddle_position);
 
     loop {
         disp.clear(Rgb565::BLACK).unwrap();
@@ -137,25 +138,32 @@ fn main() -> ! {
         }
         pong.reset_position_update_indicators();
 
+        let mut left_paddle_move = 0;
+        let mut right_paddle_move = 0;
+
         match user_input.get_input_direction(LeftRightPosition::Left) {
-            InpuDirection::Up => left_paddle_y += 5,
-            InpuDirection::Down => left_paddle_y -= 5,
+            InpuDirection::Up => left_paddle_move += 5,
+            InpuDirection::Down => left_paddle_move -= 5,
             _ => {}
         };
-        if left_paddle_y < -100 {
-            left_paddle_y = -left_paddle_y;
-        }
-        left_paddle_y %= 200;
+        match user_input.get_input_direction(LeftRightPosition::Right) {
+            InpuDirection::Up => right_paddle_move += 5,
+            InpuDirection::Down => right_paddle_move -= 5,
+            _ => {}
+        };
 
-        pong.set_left_paddle_position(Point {
-            x: 0,
-            y: left_paddle_y,
+        left_paddle_position = pong.set_left_paddle_position(Point {
+            x: left_paddle_position.x,
+            y: left_paddle_position.y + left_paddle_move,
+        });
+        right_paddle_position = pong.set_right_paddle_position(Point {
+            x: right_paddle_position.x,
+            y: right_paddle_position.y + right_paddle_move,
         });
 
-        // update_ position
-        x += 1;
-        x %= x_pixels as i32 - 5;
-        x += 5;
-        pong.set_ball_position(Point { x, y });
+        ball_position = pong.set_ball_position(Point {
+            x: ball_position.x + 5,
+            y: ball_position.y,
+        });
     }
 }
