@@ -184,7 +184,7 @@ pub struct Game {
     left_paddle: Paddle,
     right_paddle: Paddle,
     x_pixels: u32,
-    y_size: u32,
+    y_pixels: u32,
     ball: Ball,
 }
 
@@ -297,15 +297,15 @@ pub struct GameBuilder {
     left_paddle: Paddle,
     right_paddle: Paddle,
     ball: Ball,
-    x_size: u32,
-    y_size: u32,
+    x_pixels: u32,
+    y_pixels: u32,
 }
 
 impl GameBuilder {
     pub fn new(x_size: u32, y_size: u32) -> GameBuilder {
         let mut gamebuilder = GameBuilder::default();
-        gamebuilder.x_size = x_size;
-        gamebuilder.y_size = y_size;
+        gamebuilder.x_pixels = x_size;
+        gamebuilder.y_pixels = y_size;
         let gamebuilder = gamebuilder;
         gamebuilder
     }
@@ -319,8 +319,8 @@ impl GameBuilder {
                 velocity: self.ball.velocity,
                 has_moved: true,
             },
-            x_size: self.x_size,
-            y_size: self.y_size,
+            x_pixels: self.x_pixels,
+            y_pixels: self.y_pixels,
         }
     }
     pub fn paddle_size(&self, size: Size) -> GameBuilder {
@@ -338,16 +338,16 @@ impl GameBuilder {
                 has_moved: true,
             },
             ball: self.ball,
-            x_size: self.x_size,
-            y_size: self.y_size,
+            x_pixels: self.x_pixels,
+            y_pixels: self.y_pixels,
         }
     }
     pub fn build(self) -> Game {
         Game {
             left_paddle: self.left_paddle,
             right_paddle: self.right_paddle,
-            x_pixels: self.x_size,
-            y_size: self.y_size,
+            x_pixels: self.x_pixels,
+            y_pixels: self.y_pixels,
             ball: self.ball,
         }
     }
