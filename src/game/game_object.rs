@@ -1,12 +1,15 @@
 use embedded_graphics::geometry::Point;
 use embedded_graphics::geometry::Size;
 use embedded_graphics::primitives;
+use embedded_graphics::primitives::Rectangle;
 use heapless::Vec;
 
 trait GameObject {
     fn set_position(&self, pos: Point) -> Self;
     fn as_shapes(&self) -> Vec<ScreenObject, 2>; // Note: needlessly increasing N leads to much larger
                                                  // vectors due to to enum size.
+    fn get_box_covering_object(&self) -> Rectangle;
+    fn is_within(&self, rectange: &Rectangle) -> bool;
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -62,6 +65,27 @@ impl GameObject for Paddle {
             .unwrap();
         shapes
     }
+    fn get_box_covering_object(&self) -> Rectangle {
+        Rectangle {
+            top_left: self.top_left_pos,
+            size: Size {
+                width: self.x_size,
+                height: self.y_size,
+            },
+        }
+    }
+    fn is_within(&self, rectange: &Rectangle) -> bool {
+        // TODO: refactor into class?
+        let box_covering_object = self.get_box_covering_object();
+        let considered_corners = [
+            box_covering_object.top_left,
+            box_covering_object.bottom_right().unwrap(),
+        ];
+
+        considered_corners
+            .iter()
+            .all(|corner| rectange.contains(*corner))
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -101,6 +125,32 @@ impl GameObject for Ball {
             }))
             .unwrap();
         shapes
+    }
+    fn get_box_covering_object(&self) -> Rectangle {
+        let top_left = Point {
+            x: self.position.x - self.radius as i32,
+            y: self.position.y - self.radius as i32,
+        };
+        let diameter = self.radius * 2;
+        Rectangle {
+            top_left,
+            size: Size {
+                width: diameter,
+                height: diameter,
+            },
+        }
+    }
+    fn is_within(&self, rectange: &Rectangle) -> bool {
+        // TODO: refactor into class?
+        let box_covering_object = self.get_box_covering_object();
+        let considered_corners = [
+            box_covering_object.top_left,
+            box_covering_object.bottom_right().unwrap(),
+        ];
+
+        considered_corners
+            .iter()
+            .all(|corner| rectange.contains(*corner))
     }
 }
 #[derive(Debug)]
@@ -190,24 +240,54 @@ impl Game {
         moved_shapes
     }
     pub fn set_ball_position(&mut self, position: Point) {
-        // Fixme bounds check
         if position != self.ball.position {
-            self.ball.has_moved = true;
-            self.ball.position = position;
+            let moved_ball = Ball {
+                position,
+                radius: self.ball.radius,
+                velocity: self.ball.velocity,
+                has_moved: true,
+            };
+            let screen = self.get_screen_dimensions();
+            if moved_ball.is_within(&screen) {
+                self.ball = moved_ball;
+            }
         }
     }
     pub fn set_left_paddle_position(&mut self, top_left_pos: Point) {
-        // Fixme bounds check
         if top_left_pos != self.left_paddle.top_left_pos {
-            self.left_paddle.has_moved = true;
-            self.left_paddle.top_left_pos = top_left_pos;
+            let moved_paddle = Paddle {
+                top_left_pos,
+                x_size: self.left_paddle.x_size,
+                y_size: self.left_paddle.y_size,
+                has_moved: true,
+            };
+            let screen = self.get_screen_dimensions();
+            if moved_paddle.is_within(&screen) {
+                self.left_paddle = moved_paddle;
+            }
         }
     }
     pub fn set_right_paddle_position(&mut self, top_left_pos: Point) {
-        // Fixme bounds check
         if top_left_pos != self.right_paddle.top_left_pos {
-            self.right_paddle.has_moved = true;
-            self.right_paddle.top_left_pos = top_left_pos;
+            let moved_paddle = Paddle {
+                top_left_pos,
+                x_size: self.right_paddle.x_size,
+                y_size: self.right_paddle.y_size,
+                has_moved: true,
+            };
+            let screen = self.get_screen_dimensions();
+            if moved_paddle.is_within(&screen) {
+                self.right_paddle = moved_paddle;
+            }
+        }
+    }
+    fn get_screen_dimensions(&self) -> Rectangle {
+        Rectangle {
+            top_left: Point { x: 0, y: 0 },
+            size: Size {
+                width: self.x_pixels,
+                height: self.y_pixels,
+            },
         }
     }
 }
