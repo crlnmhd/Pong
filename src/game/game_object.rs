@@ -45,7 +45,7 @@ impl Default for Paddle {
 
 impl GameObject for Paddle {
     fn set_position(&self, pos: Point) -> Self {
-        Paddle {
+        Self {
             top_left_pos: pos,
             y_size: self.y_size,
             x_size: self.x_size,
@@ -109,7 +109,7 @@ impl Default for Ball {
 
 impl GameObject for Ball {
     fn set_position(&self, pos: Point) -> Self {
-        Ball {
+        Self {
             position: pos,
             radius: self.radius,
             velocity: self.velocity,
