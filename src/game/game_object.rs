@@ -239,7 +239,7 @@ impl Game {
         }
         moved_shapes
     }
-    pub fn set_ball_position(&mut self, position: Point) {
+    pub fn set_ball_position(&mut self, position: Point) -> Point {
         if position != self.ball.position {
             let moved_ball = Ball {
                 position,
@@ -252,8 +252,9 @@ impl Game {
                 self.ball = moved_ball;
             }
         }
+        self.ball.position.clone()
     }
-    pub fn set_left_paddle_position(&mut self, top_left_pos: Point) {
+    pub fn set_left_paddle_position(&mut self, top_left_pos: Point) -> Point {
         if top_left_pos != self.left_paddle.top_left_pos {
             let moved_paddle = Paddle {
                 top_left_pos,
@@ -266,8 +267,9 @@ impl Game {
                 self.left_paddle = moved_paddle;
             }
         }
+        self.left_paddle.top_left_pos.clone()
     }
-    pub fn set_right_paddle_position(&mut self, top_left_pos: Point) {
+    pub fn set_right_paddle_position(&mut self, top_left_pos: Point) -> Point {
         if top_left_pos != self.right_paddle.top_left_pos {
             let moved_paddle = Paddle {
                 top_left_pos,
@@ -280,6 +282,7 @@ impl Game {
                 self.right_paddle = moved_paddle;
             }
         }
+        self.right_paddle.top_left_pos.clone()
     }
     fn get_screen_dimensions(&self) -> Rectangle {
         Rectangle {
