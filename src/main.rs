@@ -7,6 +7,9 @@ use cortex_m_semihosting::hprintln;
 use game::input::LeftRightPosition;
 use game::input::TwoUserInputs;
 use game::physics::TimeTick;
+use hal::gpio::Analog;
+use hal::gpio::Pin;
+use hal::hal::adc::Channel;
 use hal::hal::blocking::spi;
 use hal::hal::digital::v2::OutputPin;
 use hal::pac::ADC1;
@@ -119,12 +122,7 @@ fn main() -> ! {
         .time_tick(time_tick)
         .build();
 
-    loop {
-        match play(pong, disp, user_input) {
-            GameOver::LeftWins => hprintln!("Left wins!"),
-            GameOver::RightWinds => hprintln!("Right wins!"),
-        };
-    }
+    play(pong, disp, user_input);
 }
 
 // TODO: create a wrapper for the display and user input to hopefully avoid the generics.
@@ -137,19 +135,15 @@ fn play<
     const NL: u8,
     const NR: u8,
 >(
-    pong: Game,
-    disp: ST7735<SPI, DC, RST>,
-    user_input: TwoUserInputs<PL, PR, NL, NR>,
-) -> GameOver {
-    let mut left_paddle_position = Point { x: 0, y: 0 };
-    let mut right_paddle_position = Point {
-        x: (x_pixels - paddle_width) as i32,
-        y: 0,
-    };
+    mut pong: Game,
+    mut disp: ST7735<SPI, DC, RST>,
+    mut user_input: TwoUserInputs<PL, PR, NL, NR>,
+) -> !
+where
+    Pin<PL, NL, Analog>: Channel<ADC1, ID = u8>, // Pins must be capable on analog read by ADC1.
+    Pin<PR, NR, Analog>: Channel<ADC1, ID = u8>,
+{
     let mut ball_position = Point { x: 0, y: 50 };
-
-    pong.set_right_paddle_position(right_paddle_position);
-    pong.set_left_paddle_position(left_paddle_position);
 
     loop {
         disp.clear(Rgb565::BLACK).unwrap();
@@ -172,35 +166,19 @@ fn play<
         }
         pong.reset_position_update_indicators();
 
-        let mut left_paddle_move = 0;
-        let mut right_paddle_move = 0;
-
-        match user_input.get_input_direction(LeftRightPosition::Left) {
-            InpuDirection::Up => left_paddle_move += 5,
-            InpuDirection::Down => left_paddle_move -= 5,
-            _ => {}
-        };
-        match user_input.get_input_direction(LeftRightPosition::Right) {
-            InpuDirection::Up => right_paddle_move += 5,
-            InpuDirection::Down => right_paddle_move -= 5,
-            _ => {}
-        };
-
-        left_paddle_position = pong.set_left_paddle_position(Point {
-            x: left_paddle_position.x,
-            y: left_paddle_position.y + left_paddle_move,
-        });
-        right_paddle_position = pong.set_right_paddle_position(Point {
-            x: right_paddle_position.x,
-            y: right_paddle_position.y + right_paddle_move,
-        });
-
-        match ball_position.set_ball_position(Point {
+        for player_side in [LeftRightPosition::Left, LeftRightPosition::Right].iter() {
+            pong.move_paddle(player_side, user_input.get_input_direction(player_side));
+        }
+        //.map(|player_side| pong.move_paddle(player_side, user_input.get_input_direction(player_side));)
+        match pong.set_ball_position(Point {
             x: ball_position.x + 5,
             y: ball_position.y,
         }) {
             Ok(new_ball_position) => ball_position = new_ball_position,
-            Err(game_over) => return game_over,
+            Err(game_over) => match game_over {
+                GameOver::LeftWins => hprintln!("Left wins! Congratulations!"),
+                GameOver::RightWinds => hprintln!("Right wins! Congratulations!"),
+            },
         };
     }
 }
