@@ -9,7 +9,10 @@ use heapless::Vec;
 
 use ball::Ball;
 use paddle::Paddle;
+use stm32f4xx_hal::dma::traits::Direction;
 
+use super::input::InpuDirection;
+use super::input::LeftRightPosition;
 use super::physics::BouncableObject;
 use super::physics::TimeTick;
 
@@ -143,35 +146,35 @@ impl Game {
         }
         Ok(self.ball.position.clone())
     }
-    pub fn set_left_paddle_position(&mut self, top_left_pos: Point) -> Point {
-        if top_left_pos != self.left_paddle.top_left_pos {
-            let moved_paddle = Paddle {
-                top_left_pos,
-                x_size: self.left_paddle.x_size,
-                y_size: self.left_paddle.y_size,
-                has_moved: true,
-            };
-            let screen = self.get_screen_dimensions();
-            if moved_paddle.is_within(&screen) {
-                self.left_paddle = moved_paddle;
-            }
-        }
-        self.left_paddle.top_left_pos.clone()
+    pub fn move_paddle(&mut self, side: &LeftRightPosition, direction: InpuDirection) {
+        let step_size = self.time_tick.max_paddle_movement as i32;
+        match direction {
+            InpuDirection::Up => self.move_paddle_in_y_direction(side, -step_size),
+            InpuDirection::Down => self.move_paddle_in_y_direction(side, step_size),
+            InpuDirection::Stay => {}
+        };
     }
-    pub fn set_right_paddle_position(&mut self, top_left_pos: Point) -> Point {
-        if top_left_pos != self.right_paddle.top_left_pos {
+
+    fn move_paddle_in_y_direction(&mut self, side: &LeftRightPosition, y_step: i32) {
+        let screen = self.get_screen_dimensions();
+        let paddle = match side {
+            LeftRightPosition::Left => &mut self.left_paddle,
+            LeftRightPosition::Right => &mut self.right_paddle,
+        };
+        if y_step != 0 {
             let moved_paddle = Paddle {
-                top_left_pos,
-                x_size: self.right_paddle.x_size,
-                y_size: self.right_paddle.y_size,
+                top_left_pos: Point {
+                    x: paddle.top_left_pos.x,
+                    y: paddle.top_left_pos.y + y_step,
+                },
+                x_size: paddle.x_size,
+                y_size: paddle.y_size,
                 has_moved: true,
             };
-            let screen = self.get_screen_dimensions();
             if moved_paddle.is_within(&screen) {
-                self.right_paddle = moved_paddle;
+                *paddle = moved_paddle;
             }
         }
-        self.right_paddle.top_left_pos.clone()
     }
     fn get_screen_dimensions(&self) -> Rectangle {
         Rectangle {
