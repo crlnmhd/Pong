@@ -10,6 +10,11 @@ use heapless::Vec;
 use ball::Ball;
 use paddle::Paddle;
 
+pub enum GameOver {
+    LeftWins,
+    RightWinds,
+}
+
 pub trait GameObject {
     fn set_position(&self, pos: Point) -> Self;
     fn as_shapes(&self) -> Vec<ScreenObject, 2>; // Note: needlessly increasing N leads to much larger

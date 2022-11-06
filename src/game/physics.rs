@@ -1,12 +1,15 @@
-use super::game_objects::GameObject;
-use core::time::Duration;
+use embedded_graphics::primitives::Rectangle;
 
+use super::game_objects::{GameObject, GameOver};
+
+#[derive(Copy, Clone, Default)]
 pub struct TimeTick {
-    max_paddle_movement: u32,
-    max_ball_movement: u32,
-    delay: Duration,
+    pub max_paddle_movement: u32,
+    pub max_ball_movement: u32,
 }
 
 pub trait BouncableObject {
-    fn update_location<T: GameObject>(time: &TimeTick, object: T) -> T;
+    fn bounce(&self, screen: &Rectangle, time: &TimeTick) -> Result<Self, GameOver>
+    where
+        Self: Sized;
 }

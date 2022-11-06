@@ -4,7 +4,10 @@ use embedded_graphics::{
 };
 use heapless::Vec;
 
-use super::super::physics::{BouncableObject, TimeTick};
+use super::{
+    super::physics::{BouncableObject, TimeTick},
+    GameOver,
+};
 
 use super::{GameObject, ScreenObject, Velocity};
 
@@ -75,7 +78,10 @@ impl GameObject for Ball {
 }
 
 impl BouncableObject for Ball {
-    fn update_location<T: GameObject>(time: &TimeTick, object: T) -> T {
-        object // FIXME implement
+    fn bounce(&self, screen: &Rectangle, time: &TimeTick) -> Result<Self, GameOver>
+    where
+        Self: Sized,
+    {
+        Ok(*self)
     }
 }
