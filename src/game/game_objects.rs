@@ -220,13 +220,16 @@ impl GameBuilder {
     pub fn paddle_size(&self, size: Size) -> GameBuilder {
         GameBuilder {
             left_paddle: Paddle {
-                top_left_pos: self.left_paddle.top_left_pos,
+                top_left_pos: Point { x: 0, y: 0 },
                 x_size: size.width,
                 y_size: size.height,
                 has_moved: true,
             },
             right_paddle: Paddle {
-                top_left_pos: self.right_paddle.top_left_pos,
+                top_left_pos: Point {
+                    x: (self.x_pixels - size.width) as i32,
+                    y: 0,
+                },
                 x_size: size.width,
                 y_size: size.height,
                 has_moved: true,
