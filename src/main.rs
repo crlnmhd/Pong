@@ -7,6 +7,7 @@ use cortex_m_semihosting::hprintln;
 use game::input::LeftRightPosition;
 use game::input::TwoUserInputs;
 use game::physics::TimeTick;
+use hal::hal::blocking::spi;
 use hal::hal::digital::v2::OutputPin;
 use hal::pac::ADC1;
 use hal::serial::config::WordLength;
@@ -118,6 +119,28 @@ fn main() -> ! {
         .time_tick(time_tick)
         .build();
 
+    loop {
+        match play(pong, disp, user_input) {
+            GameOver::LeftWins => hprintln!("Left wins!"),
+            GameOver::RightWinds => hprintln!("Right wins!"),
+        };
+    }
+}
+
+// TODO: create a wrapper for the display and user input to hopefully avoid the generics.
+fn play<
+    SPI: spi::Write<u8>,
+    DC: OutputPin,
+    RST: OutputPin,
+    const PL: char,
+    const PR: char,
+    const NL: u8,
+    const NR: u8,
+>(
+    pong: Game,
+    disp: ST7735<SPI, DC, RST>,
+    user_input: TwoUserInputs<PL, PR, NL, NR>,
+) -> GameOver {
     let mut left_paddle_position = Point { x: 0, y: 0 };
     let mut right_paddle_position = Point {
         x: (x_pixels - paddle_width) as i32,
@@ -172,9 +195,12 @@ fn main() -> ! {
             y: right_paddle_position.y + right_paddle_move,
         });
 
-        ball_position = pong.set_ball_position(Point {
+        match ball_position.set_ball_position(Point {
             x: ball_position.x + 5,
             y: ball_position.y,
-        });
+        }) {
+            Ok(new_ball_position) => ball_position = new_ball_position,
+            Err(game_over) => return game_over,
+        };
     }
 }
