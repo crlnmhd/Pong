@@ -13,12 +13,21 @@ use stm32f4xx_hal::dma::traits::Direction;
 
 use super::input::InpuDirection;
 use super::input::LeftRightPosition;
+use super::physics;
 use super::physics::BouncableObject;
+use super::physics::MovingObject;
 use super::physics::TimeTick;
 
+#[derive(Debug)]
 pub enum GameOver {
     LeftWins,
-    RightWinds,
+    RightWins,
+}
+
+#[derive(Debug)]
+pub enum GameState {
+    Ongoing,
+    Finnished(GameOver),
 }
 
 pub trait GameObject {
@@ -32,8 +41,8 @@ pub trait GameObject {
 #[derive(Clone, Copy, Debug)]
 pub struct Velocity {
     // Direction of movement from the balls frame of reference.
-    vx: i32,
-    vy: i32,
+    pub vx: i32,
+    pub vy: i32,
 }
 
 #[derive(Clone, Debug)]
@@ -129,13 +138,25 @@ impl Game {
         }
         moved_shapes
     }
-    pub fn set_ball_position(&mut self, position: Point) -> Result<Point, GameOver> {
-        if position != self.ball.position {
-            let screen = self.get_screen_dimensions();
-            self.ball = self.ball.set_position(position);
-            self.ball.bounce(&screen, &self.time_tick)?;
+    pub fn let_ball_move(&mut self) -> GameState {
+        // TODO return general GameState
+        let ball_movement = self.ball.get_relative_movement(&self.time_tick);
+        let screen = self.get_screen_dimensions();
+
+        // TODO: refactor into method. This is not clean.
+        let mut new_postion = self.ball.position.clone();
+        new_postion.x += ball_movement.x;
+        new_postion.y += ball_movement.y;
+
+        let mut moved_ball = self.ball.set_position(new_postion);
+        match moved_ball.bounce(&screen, &self.time_tick) {
+            Ok(ball) => {
+                self.ball = ball;
+                self.ball.has_moved = true;
+                GameState::Ongoing
+            }
+            Err(game_over_with_winner) => GameState::Finnished(game_over_with_winner),
         }
-        Ok(self.ball.position.clone())
     }
     pub fn move_paddle(&mut self, side: &LeftRightPosition, direction: InpuDirection) {
         let step_size = self.time_tick.max_paddle_movement as i32;
@@ -144,6 +165,9 @@ impl Game {
             InpuDirection::Down => self.move_paddle_in_y_direction(side, step_size),
             InpuDirection::Stay => {}
         };
+    }
+    pub fn start_new_game(&mut self) {
+        self.ball = self.ball.set_position(self.get_default_ball_position());
     }
 
     fn move_paddle_in_y_direction(&mut self, side: &LeftRightPosition, y_step: i32) {
@@ -175,6 +199,9 @@ impl Game {
                 height: self.y_pixels,
             },
         }
+    }
+    fn get_default_ball_position(&self) -> Point {
+        Point { x: 50, y: 50 }
     }
 }
 
@@ -242,6 +269,21 @@ impl GameBuilder {
             x_pixels: self.x_pixels,
             y_pixels: self.y_pixels,
             time_tick,
+        }
+    }
+    pub fn initial_ball_velocity(&self, velocity: Velocity) -> GameBuilder {
+        GameBuilder {
+            left_paddle: self.left_paddle,
+            right_paddle: self.right_paddle,
+            ball: Ball {
+                position: self.ball.position,
+                radius: self.ball.radius,
+                velocity,
+                has_moved: self.ball.has_moved,
+            },
+            x_pixels: self.x_pixels,
+            y_pixels: self.y_pixels,
+            time_tick: self.time_tick,
         }
     }
 

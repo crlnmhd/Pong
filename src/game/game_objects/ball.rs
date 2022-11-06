@@ -4,9 +4,11 @@ use embedded_graphics::{
 };
 use heapless::Vec;
 
+use crate::game::physics::MovingObject;
+
 use super::{
     super::physics::{BouncableObject, TimeTick},
-    GameOver,
+    GameOver, GameState,
 };
 
 use super::{GameObject, ScreenObject, Velocity};
@@ -81,11 +83,23 @@ impl BouncableObject for Ball {
     fn bounce(&mut self, screen: &Rectangle, time: &TimeTick) -> Result<Self, GameOver> {
         self.move_with_bounce(screen, time);
         if self.left_player_has_lost_ball(screen) {
-            return Err(GameOver::RightWinds);
+            return Err(GameOver::RightWins);
         } else if self.right_player_has_lost_ball(screen) {
             return Err(GameOver::LeftWins);
         }
         Ok(*self)
+    }
+}
+
+impl MovingObject for Ball {
+    fn get_velocity(&self) -> Velocity {
+        self.velocity.clone()
+    }
+    fn get_relative_movement(&self, time: &TimeTick) -> Point {
+        let velocity = self.get_velocity();
+        let dx = velocity.vx * (time.time_step as i32);
+        let dy = velocity.vy * (time.time_step as i32);
+        Point { x: dx, y: dy }
     }
 }
 

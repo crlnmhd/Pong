@@ -6,7 +6,7 @@ use cortex_m;
 use cortex_m_semihosting::hprintln;
 use game::input::LeftRightPosition;
 use game::input::TwoUserInputs;
-use game::physics::TimeTick;
+use game::physics::{MovingObject, TimeTick};
 use hal::gpio::Analog;
 use hal::gpio::Pin;
 use hal::hal::adc::Channel;
@@ -111,6 +111,7 @@ fn main() -> ! {
     let time_tick = TimeTick {
         max_ball_movement: 5,
         max_paddle_movement: 5,
+        time_step: 1,
     };
 
     let mut pong: Game = GameBuilder::new(x_pixels, y_pixels)
@@ -120,6 +121,7 @@ fn main() -> ! {
             height: 40,
         })
         .time_tick(time_tick)
+        .initial_ball_velocity(Velocity { vx: 1, vy: 1 })
         .build();
 
     play(pong, disp, user_input);
@@ -143,8 +145,7 @@ where
     Pin<PL, NL, Analog>: Channel<ADC1, ID = u8>, // Pins must be capable on analog read by ADC1.
     Pin<PR, NR, Analog>: Channel<ADC1, ID = u8>,
 {
-    let mut ball_position = Point { x: 0, y: 50 };
-
+    game.start_new_game();
     loop {
         disp.clear(Rgb565::BLACK).unwrap();
         // re draw objects
@@ -169,15 +170,12 @@ where
         for player_side in [LeftRightPosition::Left, LeftRightPosition::Right].iter() {
             game.move_paddle(player_side, user_input.get_input_direction(player_side));
         }
-        match game.set_ball_position(Point {
-            x: ball_position.x + 5,
-            y: ball_position.y,
-        }) {
-            Ok(new_ball_position) => ball_position = new_ball_position,
-            Err(game_over) => match game_over {
+        if let GameState::Finnished(winner) = game.let_ball_move() {
+            match winner {
                 GameOver::LeftWins => hprintln!("Left wins! Congratulations!"),
-                GameOver::RightWinds => hprintln!("Right wins! Congratulations!"),
-            },
-        };
+                GameOver::RightWins => hprintln!("Right wins! Congratulations!"),
+            };
+            game.start_new_game();
+        }
     }
 }
