@@ -131,18 +131,9 @@ impl Game {
     }
     pub fn set_ball_position(&mut self, position: Point) -> Result<Point, GameOver> {
         if position != self.ball.position {
-            let mut moved_ball = Ball {
-                position,
-                radius: self.ball.radius,
-                velocity: self.ball.velocity,
-                has_moved: true,
-            };
             let screen = self.get_screen_dimensions();
-            moved_ball = moved_ball.bounce(&screen, &self.time_tick)?;
-
-            if moved_ball.is_within(&screen) {
-                self.ball = moved_ball;
-            }
+            self.ball = self.ball.set_position(position);
+            self.ball.bounce(&screen, &self.time_tick)?;
         }
         Ok(self.ball.position.clone())
     }

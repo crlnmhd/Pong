@@ -78,7 +78,25 @@ impl GameObject for Ball {
 }
 
 impl BouncableObject for Ball {
-    fn bounce(&self, screen: &Rectangle, time: &TimeTick) -> Result<Self, GameOver> {
+    fn bounce(&mut self, screen: &Rectangle, time: &TimeTick) -> Result<Self, GameOver> {
+        self.move_with_bounce(screen, time);
+        if self.left_player_has_lost_ball(screen) {
+            return Err(GameOver::RightWinds);
+        } else if self.right_player_has_lost_ball(screen) {
+            return Err(GameOver::LeftWins);
+        }
         Ok(*self)
+    }
+}
+
+impl Ball {
+    fn left_player_has_lost_ball(&self, screen: &Rectangle) -> bool {
+        self.position.x < screen.top_left.x
+    }
+    fn right_player_has_lost_ball(&self, screen: &Rectangle) -> bool {
+        self.position.x > screen.top_left.x + (screen.size.width as i32)
+    }
+    fn move_with_bounce(&mut self, screen: &Rectangle, time: &TimeTick) {
+        // FIXME implement
     }
 }
