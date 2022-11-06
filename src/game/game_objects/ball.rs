@@ -4,9 +4,9 @@ use embedded_graphics::{
 };
 use heapless::Vec;
 
-use crate::game::physics::TimeTick;
+use super::super::physics::{BouncableObject, TimeTick};
 
-use super::{BouncableObject, GameObject, ScreenObject, Velocity};
+use super::{GameObject, ScreenObject, Velocity};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Ball {

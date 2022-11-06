@@ -1,7 +1,6 @@
 pub mod ball;
 pub mod paddle;
 
-use super::physics::TimeTick;
 use embedded_graphics::geometry::Point;
 use embedded_graphics::geometry::Size;
 use embedded_graphics::primitives;
@@ -11,7 +10,7 @@ use heapless::Vec;
 use ball::Ball;
 use paddle::Paddle;
 
-trait GameObject {
+pub trait GameObject {
     fn set_position(&self, pos: Point) -> Self;
     fn as_shapes(&self) -> Vec<ScreenObject, 2>; // Note: needlessly increasing N leads to much larger
                                                  // vectors due to to enum size.
@@ -30,10 +29,6 @@ pub struct Velocity {
 pub enum ScreenObject {
     Rectangle(primitives::Rectangle),
     Circle(primitives::Circle),
-}
-
-trait BouncableObject {
-    fn update_location<T: GameObject>(time: &TimeTick, object: T) -> T;
 }
 
 #[derive(Debug)]
