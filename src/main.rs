@@ -102,16 +102,21 @@ fn main() -> ! {
     disp.set_orientation(&Orientation::Landscape).unwrap();
     disp.clear(Rgb565::BLACK).unwrap();
 
+    let paddle_width = 6u32;
+
     let mut pong: Game = GameBuilder::new(x_pixels, y_pixels)
         .ball_radius(3)
         .paddle_size(Size {
-            width: 6,
+            width: paddle_width,
             height: 40,
         })
         .build();
 
     let mut left_paddle_position = Point { x: 0, y: 0 };
-    let mut right_paddle_position = Point { x: 120, y: 0 };
+    let mut right_paddle_position = Point {
+        x: (x_pixels - paddle_width) as i32,
+        y: 0,
+    };
     let mut ball_position = Point { x: 0, y: 50 };
 
     pong.set_right_paddle_position(right_paddle_position);
