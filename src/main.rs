@@ -135,7 +135,7 @@ fn play<
     const NL: u8,
     const NR: u8,
 >(
-    mut pong: Game,
+    mut game: Game,
     mut disp: ST7735<SPI, DC, RST>,
     mut user_input: TwoUserInputs<PL, PR, NL, NR>,
 ) -> !
@@ -148,7 +148,7 @@ where
     loop {
         disp.clear(Rgb565::BLACK).unwrap();
         // re draw objects
-        for shape in pong.get_content_to_display().into_iter() {
+        for shape in game.get_content_to_display().into_iter() {
             match shape {
                 ScreenObject::Rectangle(rectangle) => {
                     rectangle
@@ -164,13 +164,12 @@ where
                 }
             }
         }
-        pong.reset_position_update_indicators();
+        game.reset_position_update_indicators();
 
         for player_side in [LeftRightPosition::Left, LeftRightPosition::Right].iter() {
-            pong.move_paddle(player_side, user_input.get_input_direction(player_side));
+            game.move_paddle(player_side, user_input.get_input_direction(player_side));
         }
-        //.map(|player_side| pong.move_paddle(player_side, user_input.get_input_direction(player_side));)
-        match pong.set_ball_position(Point {
+        match game.set_ball_position(Point {
             x: ball_position.x + 5,
             y: ball_position.y,
         }) {
