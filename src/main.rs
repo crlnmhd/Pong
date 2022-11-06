@@ -6,6 +6,7 @@ use cortex_m;
 use cortex_m_semihosting::hprintln;
 use game::input::LeftRightPosition;
 use game::input::TwoUserInputs;
+use game::physics::TimeTick;
 use hal::hal::digital::v2::OutputPin;
 use hal::pac::ADC1;
 use hal::serial::config::WordLength;
@@ -103,6 +104,10 @@ fn main() -> ! {
     disp.clear(Rgb565::BLACK).unwrap();
 
     let paddle_width = 6u32;
+    let time_tick = TimeTick {
+        max_ball_movement: 5,
+        max_paddle_movement: 5,
+    };
 
     let mut pong: Game = GameBuilder::new(x_pixels, y_pixels)
         .ball_radius(3)
@@ -110,6 +115,7 @@ fn main() -> ! {
             width: paddle_width,
             height: 40,
         })
+        .time_tick(time_tick)
         .build();
 
     let mut left_paddle_position = Point { x: 0, y: 0 };

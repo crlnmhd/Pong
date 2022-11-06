@@ -10,6 +10,8 @@ use heapless::Vec;
 use ball::Ball;
 use paddle::Paddle;
 
+use super::physics::TimeTick;
+
 pub enum GameOver {
     LeftWins,
     RightWinds,
@@ -69,6 +71,7 @@ pub struct Game {
     x_pixels: u32,
     y_pixels: u32,
     ball: Ball,
+    time_tick: TimeTick,
 }
 
 impl Game {
@@ -185,6 +188,7 @@ pub struct GameBuilder {
     ball: Ball,
     x_pixels: u32,
     y_pixels: u32,
+    time_tick: TimeTick,
 }
 
 impl GameBuilder {
@@ -207,6 +211,7 @@ impl GameBuilder {
             },
             x_pixels: self.x_pixels,
             y_pixels: self.y_pixels,
+            time_tick: self.time_tick,
         }
     }
     pub fn paddle_size(&self, size: Size) -> GameBuilder {
@@ -226,8 +231,20 @@ impl GameBuilder {
             ball: self.ball,
             x_pixels: self.x_pixels,
             y_pixels: self.y_pixels,
+            time_tick: self.time_tick,
         }
     }
+    pub fn time_tick(&self, time_tick: TimeTick) -> GameBuilder {
+        GameBuilder {
+            left_paddle: self.left_paddle,
+            right_paddle: self.right_paddle,
+            ball: self.ball,
+            x_pixels: self.x_pixels,
+            y_pixels: self.y_pixels,
+            time_tick,
+        }
+    }
+
     pub fn build(self) -> Game {
         Game {
             left_paddle: self.left_paddle,
@@ -235,6 +252,7 @@ impl GameBuilder {
             x_pixels: self.x_pixels,
             y_pixels: self.y_pixels,
             ball: self.ball,
+            time_tick: self.time_tick,
         }
     }
 }
