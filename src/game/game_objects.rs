@@ -1,3 +1,4 @@
+pub mod ball;
 pub mod paddle;
 
 use super::physics::TimeTick;
@@ -7,6 +8,7 @@ use embedded_graphics::primitives;
 use embedded_graphics::primitives::Rectangle;
 use heapless::Vec;
 
+use ball::Ball;
 use paddle::Paddle;
 
 trait GameObject {
@@ -18,7 +20,7 @@ trait GameObject {
 }
 
 #[derive(Clone, Copy, Debug)]
-struct Velocity {
+pub struct Velocity {
     // Direction of movement from the balls frame of reference.
     vx: i32,
     vy: i32,
@@ -32,78 +34,6 @@ pub enum ScreenObject {
 
 trait BouncableObject {
     fn update_location<T: GameObject>(time: &TimeTick, object: T) -> T;
-}
-
-#[derive(Clone, Copy, Debug)]
-struct Ball {
-    position: Point,
-    radius: u32,
-    velocity: Velocity,
-    has_moved: bool,
-}
-
-impl Default for Ball {
-    fn default() -> Self {
-        Ball {
-            position: Point { x: 0, y: 0 },
-            radius: 1,
-            velocity: Velocity { vx: 0, vy: 0 },
-            has_moved: false,
-        }
-    }
-}
-
-impl GameObject for Ball {
-    fn set_position(&self, pos: Point) -> Self {
-        Self {
-            position: pos,
-            radius: self.radius,
-            velocity: self.velocity,
-            has_moved: self.has_moved,
-        }
-    }
-    fn as_shapes(&self) -> Vec<ScreenObject, 2> {
-        let mut shapes: Vec<ScreenObject, 2> = Vec::new();
-        shapes
-            .push(ScreenObject::Circle(primitives::Circle {
-                top_left: self.position,
-                diameter: self.radius * 2,
-            }))
-            .unwrap();
-        shapes
-    }
-    fn get_box_covering_object(&self) -> Rectangle {
-        let top_left = Point {
-            x: self.position.x - self.radius as i32,
-            y: self.position.y - self.radius as i32,
-        };
-        let diameter = self.radius * 2;
-        Rectangle {
-            top_left,
-            size: Size {
-                width: diameter,
-                height: diameter,
-            },
-        }
-    }
-    fn is_within(&self, rectange: &Rectangle) -> bool {
-        // TODO: refactor into class?
-        let box_covering_object = self.get_box_covering_object();
-        let considered_corners = [
-            box_covering_object.top_left,
-            box_covering_object.bottom_right().unwrap(),
-        ];
-
-        considered_corners
-            .iter()
-            .all(|corner| rectange.contains(*corner))
-    }
-}
-
-impl BouncableObject for Ball {
-    fn update_location<T: GameObject>(time: &TimeTick, object: T) -> T {
-        object // FIXME implement
-    }
 }
 
 #[derive(Debug)]
