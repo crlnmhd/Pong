@@ -1,3 +1,4 @@
+use super::physics::TimeTick;
 use embedded_graphics::geometry::Point;
 use embedded_graphics::geometry::Size;
 use embedded_graphics::primitives;
@@ -18,6 +19,7 @@ struct Velocity {
     vx: i32,
     vy: i32,
 }
+
 #[derive(Clone, Copy, Debug)]
 struct Paddle {
     top_left_pos: Point,
@@ -88,6 +90,10 @@ impl GameObject for Paddle {
     }
 }
 
+trait BouncableObject {
+    fn update_location<T: GameObject>(time: &TimeTick, object: T) -> T;
+}
+
 #[derive(Clone, Copy, Debug)]
 struct Ball {
     position: Point,
@@ -153,6 +159,13 @@ impl GameObject for Ball {
             .all(|corner| rectange.contains(*corner))
     }
 }
+
+impl BouncableObject for Ball {
+    fn update_location<T: GameObject>(time: &TimeTick, object: T) -> T {
+        object // FIXME implement
+    }
+}
+
 #[derive(Debug)]
 enum DrawableGameOject<'a> {
     Paddle(&'a mut Paddle),

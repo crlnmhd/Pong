@@ -33,7 +33,7 @@ use st7735_lcd::{Orientation, ST7735};
 use hal::prelude::*;
 
 mod game;
-use game::game_object::*;
+use game::game_objects::*;
 use game::input;
 use input::UserInteraction;
 
