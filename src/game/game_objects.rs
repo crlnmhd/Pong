@@ -10,6 +10,7 @@ use heapless::Vec;
 use ball::Ball;
 use paddle::Paddle;
 
+use super::physics::BouncableObject;
 use super::physics::TimeTick;
 
 pub enum GameOver {
@@ -125,7 +126,7 @@ impl Game {
         }
         moved_shapes
     }
-    pub fn set_ball_position(&mut self, position: Point) -> Point {
+    pub fn set_ball_position(&mut self, position: Point) -> Result<Point, GameOver> {
         if position != self.ball.position {
             let moved_ball = Ball {
                 position,
@@ -134,11 +135,13 @@ impl Game {
                 has_moved: true,
             };
             let screen = self.get_screen_dimensions();
+            moved_ball = moved_ball.bounce(&screen, &self.time_tick)?;
+
             if moved_ball.is_within(&screen) {
                 self.ball = moved_ball;
             }
         }
-        self.ball.position.clone()
+        Ok(self.ball.position.clone())
     }
     pub fn set_left_paddle_position(&mut self, top_left_pos: Point) -> Point {
         if top_left_pos != self.left_paddle.top_left_pos {

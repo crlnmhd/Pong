@@ -78,10 +78,7 @@ impl GameObject for Ball {
 }
 
 impl BouncableObject for Ball {
-    fn bounce(&self, screen: &Rectangle, time: &TimeTick) -> Result<Self, GameOver>
-    where
-        Self: Sized,
-    {
+    fn bounce(&self, screen: &Rectangle, time: &TimeTick) -> Result<Self, GameOver> {
         Ok(*self)
     }
 }
