@@ -23,7 +23,7 @@ pub struct TwoUserInputs<const PL: char, const PR: char, const NL: u8, const NR:
 }
 
 pub trait UserInteraction {
-    fn get_input_direction(&mut self, user_position: LeftRightPosition) -> InpuDirection;
+    fn get_input_direction(&mut self, user_position: &LeftRightPosition) -> InpuDirection;
 }
 
 impl<const PL: char, const PR: char, const NL: u8, const NR: u8> UserInteraction
@@ -32,7 +32,7 @@ where
     Pin<PL, NL, Analog>: Channel<ADC1, ID = u8>, // Pins must be capable on analog read by ADC1.
     Pin<PR, NR, Analog>: Channel<ADC1, ID = u8>,
 {
-    fn get_input_direction(&mut self, user_position: LeftRightPosition) -> InpuDirection {
+    fn get_input_direction(&mut self, user_position: &LeftRightPosition) -> InpuDirection {
         let input_percentage = self.get_input_percentage(user_position);
         match input_percentage {
             0..=39 => InpuDirection::Up,
@@ -53,7 +53,7 @@ where
     Pin<PL, NL, Analog>: Channel<ADC1, ID = u8>, // Pins must be capable on analog read by ADC1.
     Pin<PR, NR, Analog>: Channel<ADC1, ID = u8>,
 {
-    fn get_input_percentage(&mut self, user_position: LeftRightPosition) -> u8 {
+    fn get_input_percentage(&mut self, user_position: &LeftRightPosition) -> u8 {
         let sample_time = SampleTime::Cycles_480;
         let sample = match user_position {
             LeftRightPosition::Left => self.adc1.convert(&self.left_user, sample_time),

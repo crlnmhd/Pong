@@ -131,7 +131,7 @@ impl Game {
     }
     pub fn set_ball_position(&mut self, position: Point) -> Result<Point, GameOver> {
         if position != self.ball.position {
-            let moved_ball = Ball {
+            let mut moved_ball = Ball {
                 position,
                 radius: self.ball.radius,
                 velocity: self.ball.velocity,
