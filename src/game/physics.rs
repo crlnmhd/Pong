@@ -17,7 +17,7 @@ pub struct TimeTick {
 }
 
 pub trait BouncableObject {
-    fn bounce(&mut self, screen: &Rectangle, time: &TimeTick) -> Result<Self, GameOver>
+    fn bounce(&mut self, screen: &Rectangle, new_position: &Point) -> Result<Self, GameOver>
     where
         Self: Sized;
 }

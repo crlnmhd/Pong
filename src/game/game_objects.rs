@@ -142,8 +142,7 @@ impl Game {
         new_postion.x += ball_movement.x;
         new_postion.y += ball_movement.y;
 
-        let mut moved_ball = self.ball.set_position(new_postion);
-        match moved_ball.bounce(&screen, &self.time_tick) {
+        match self.ball.bounce(&screen, &new_postion) {
             Ok(ball) => {
                 self.ball = ball;
                 self.ball.has_moved = true;

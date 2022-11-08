@@ -80,8 +80,8 @@ impl GameObject for Ball {
 }
 
 impl BouncableObject for Ball {
-    fn bounce(&mut self, screen: &Rectangle, time: &TimeTick) -> Result<Self, GameOver> {
-        self.move_with_bounce(screen, time);
+    fn bounce(&mut self, screen: &Rectangle, new_postion: &Point) -> Result<Self, GameOver> {
+        self.move_with_bounce(screen, new_postion);
         if self.left_player_has_lost_ball(screen) {
             return Err(GameOver::RightWins);
         } else if self.right_player_has_lost_ball(screen) {
@@ -110,7 +110,32 @@ impl Ball {
     fn right_player_has_lost_ball(&self, screen: &Rectangle) -> bool {
         self.position.x > screen.top_left.x + (screen.size.width as i32)
     }
-    fn move_with_bounce(&mut self, screen: &Rectangle, time: &TimeTick) {
-        // FIXME implement
+    fn move_with_bounce(&mut self, screen: &Rectangle, new_postion: &Point) {
+        // TODO: support for multiple bounces?
+        self.bounce_against_top_wall(screen, new_postion);
+        self.bounce_against_bottom_wall(screen, new_postion);
+    }
+
+    fn bounce_against_top_wall(&mut self, screen: &Rectangle, new_postion: &Point) {
+        let top_overshoot: i32 = screen.top_left.y - new_postion.y;
+        self.position = *new_postion;
+        if top_overshoot > 0 {
+            let new_height = screen.top_left.y + top_overshoot; // y grows downward
+            self.position.y = new_height;
+            self.invert_vertical_velocity();
+        }
+    }
+
+    fn bounce_against_bottom_wall(&mut self, screen: &Rectangle, new_postion: &Point) {
+        let bottom_overshoot = new_postion.y - screen.bottom_right().unwrap().y;
+        self.position = *new_postion;
+        if bottom_overshoot > 0 {
+            let new_height = screen.bottom_right().unwrap().y - bottom_overshoot;
+            self.position.y = new_height;
+            self.invert_vertical_velocity();
+        }
+    }
+    fn invert_vertical_velocity(&mut self) {
+        self.velocity.vy *= -1;
     }
 }
