@@ -4,14 +4,14 @@ use embedded_graphics::{
 };
 use heapless::Vec;
 
-use crate::game::physics::MovingObject;
+use crate::game::physics::{MovingObject, Velocity};
 
 use super::{
     super::physics::{BouncableObject, TimeTick},
     GameOver, GameState,
 };
 
-use super::{GameObject, ScreenObject, Velocity};
+use super::{GameObject, ScreenObject};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Ball {

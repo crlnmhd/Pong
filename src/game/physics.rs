@@ -1,6 +1,13 @@
 use embedded_graphics::{prelude::Point, primitives::Rectangle};
 
-use super::game_objects::{GameOver, Velocity};
+use super::game_objects::GameOver;
+
+#[derive(Clone, Copy, Debug)]
+pub struct Velocity {
+    // Direction of movement from the balls frame of reference.
+    pub vx: i32,
+    pub vy: i32,
+}
 
 #[derive(Copy, Clone, Default)]
 pub struct TimeTick {

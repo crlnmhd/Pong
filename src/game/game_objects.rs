@@ -17,6 +17,7 @@ use super::physics;
 use super::physics::BouncableObject;
 use super::physics::MovingObject;
 use super::physics::TimeTick;
+use super::physics::Velocity;
 
 #[derive(Debug)]
 pub enum GameOver {
@@ -36,13 +37,6 @@ pub trait GameObject {
                                                  // vectors due to to enum size.
     fn get_box_covering_object(&self) -> Rectangle;
     fn is_within(&self, rectange: &Rectangle) -> bool;
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct Velocity {
-    // Direction of movement from the balls frame of reference.
-    pub vx: i32,
-    pub vy: i32,
 }
 
 #[derive(Clone, Debug)]

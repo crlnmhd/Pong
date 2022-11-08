@@ -6,6 +6,7 @@ use cortex_m;
 use cortex_m_semihosting::hprintln;
 use game::input::LeftRightPosition;
 use game::input::TwoUserInputs;
+use game::physics::Velocity;
 use game::physics::{MovingObject, TimeTick};
 use hal::gpio::Analog;
 use hal::gpio::Pin;
