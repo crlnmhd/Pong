@@ -1,6 +1,9 @@
 use embedded_graphics::{prelude::Point, primitives::Rectangle};
 
-use super::game_objects::GameOver;
+use super::{
+    game_objects::{paddle::Paddle, GameOver},
+    input::LeftRightPosition,
+};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Velocity {
@@ -17,9 +20,8 @@ pub struct TimeTick {
 }
 
 pub trait BouncableObject {
-    fn bounce(&mut self, screen: &Rectangle, new_position: &Point) -> Result<Self, GameOver>
-    where
-        Self: Sized;
+    fn bounce_aginst_walls(&mut self, screen: &Rectangle, new_position: &Point);
+    fn bounce_against_paddles(&mut self, left_paddle: &Paddle, right_padde: &Paddle);
 }
 
 pub trait MovingObject {

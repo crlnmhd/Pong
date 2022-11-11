@@ -141,7 +141,7 @@ impl Game {
         new_postion.x += ball_movement.x;
         new_postion.y += ball_movement.y;
 
-        match self.ball.bounce(&screen, &new_postion) {
+        match self.bounce_ball(&screen, &new_postion) {
             Ok(ball) => {
                 self.ball = ball;
                 self.ball.has_moved = true;
@@ -194,6 +194,24 @@ impl Game {
     }
     fn get_default_ball_position(&self) -> Point {
         Point { x: 50, y: 50 }
+    }
+    fn bounce_ball(&mut self, screen: &Rectangle, new_position: &Point) -> Result<Ball, GameOver> {
+        self.ball.bounce_aginst_walls(screen, new_position);
+        self.ball
+            .bounce_against_paddles(&self.left_paddle, &self.right_paddle);
+        if let Some(winner) = self.get_winner(screen) {
+            Err(winner)
+        } else {
+            Ok(self.ball)
+        }
+    }
+    fn get_winner(&self, screen: &Rectangle) -> Option<GameOver> {
+        if self.ball.left_player_has_lost_ball(screen) {
+            return Some(GameOver::RightWins);
+        } else if self.ball.right_player_has_lost_ball(screen) {
+            return Some(GameOver::LeftWins);
+        }
+        None
     }
 }
 

@@ -4,10 +4,14 @@ use embedded_graphics::{
 };
 use heapless::Vec;
 
-use crate::game::physics::{MovingObject, Velocity};
+use crate::game::{
+    input::LeftRightPosition,
+    physics::{MovingObject, Velocity},
+};
 
 use super::{
     super::physics::{BouncableObject, TimeTick},
+    paddle::Paddle,
     GameOver, GameState,
 };
 
@@ -80,12 +84,24 @@ impl GameObject for Ball {
 }
 
 impl BouncableObject for Ball {
-    fn bounce(&mut self, screen: &Rectangle, new_postion: &Point) -> Result<Self, GameOver> {
-        self.move_with_bounce(screen, new_postion);
-        if let Some(winner) = self.get_winner(screen) {
-            return Err(winner);
+    fn bounce_aginst_walls(&mut self, screen: &Rectangle, new_position: &Point) {
+        self.bounce_against_top_wall(screen, new_position);
+        self.bounce_against_bottom_wall(screen, new_position);
+    }
+    fn bounce_against_paddles(
+        &mut self,
+        left_paddle: &super::paddle::Paddle,
+        right_paddle: &super::paddle::Paddle,
+    ) {
+        let moving_towards_left_paddle = self.velocity.vx < 0;
+
+        let has_collided = match moving_towards_left_paddle {
+            true => self.has_hit_paddle(left_paddle),
+            false => self.has_hit_paddle(right_paddle),
+        };
+        if has_collided {
+            self.invert_horizontal_velocity();
         }
-        Ok(*self)
     }
 }
 
@@ -102,16 +118,11 @@ impl MovingObject for Ball {
 }
 
 impl Ball {
-    fn left_player_has_lost_ball(&self, screen: &Rectangle) -> bool {
+    pub fn left_player_has_lost_ball(&self, screen: &Rectangle) -> bool {
         self.position.x < screen.top_left.x
     }
-    fn right_player_has_lost_ball(&self, screen: &Rectangle) -> bool {
+    pub fn right_player_has_lost_ball(&self, screen: &Rectangle) -> bool {
         self.position.x > screen.top_left.x + (screen.size.width as i32)
-    }
-    fn move_with_bounce(&mut self, screen: &Rectangle, new_postion: &Point) {
-        // TODO: support for multiple bounces?
-        self.bounce_against_top_wall(screen, new_postion);
-        self.bounce_against_bottom_wall(screen, new_postion);
     }
 
     fn bounce_against_top_wall(&mut self, screen: &Rectangle, new_postion: &Point) {
@@ -133,16 +144,17 @@ impl Ball {
             self.invert_vertical_velocity();
         }
     }
+
     fn invert_vertical_velocity(&mut self) {
         self.velocity.vy *= -1;
     }
 
-    fn get_winner(&self, screen: &Rectangle) -> Option<GameOver> {
-        if self.left_player_has_lost_ball(screen) {
-            return Some(GameOver::RightWins);
-        } else if self.right_player_has_lost_ball(screen) {
-            return Some(GameOver::LeftWins);
-        }
-        None
+    fn invert_horizontal_velocity(&mut self) {
+        self.velocity.vx *= -1;
+    }
+
+    fn has_hit_paddle(&self, paddle: &Paddle) -> bool {
+        let paddle_area = paddle.get_box_covering_object();
+        paddle_area.contains(self.position) // FIXME: improved checking.
     }
 }
