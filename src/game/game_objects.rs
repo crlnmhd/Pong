@@ -133,7 +133,6 @@ impl Game {
         moved_shapes
     }
     pub fn let_ball_move(&mut self) -> GameState {
-        // TODO return general GameState
         let ball_movement = self.ball.get_relative_movement(&self.time_tick);
         let screen = self.get_screen_dimensions();
 

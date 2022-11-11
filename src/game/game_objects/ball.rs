@@ -82,10 +82,8 @@ impl GameObject for Ball {
 impl BouncableObject for Ball {
     fn bounce(&mut self, screen: &Rectangle, new_postion: &Point) -> Result<Self, GameOver> {
         self.move_with_bounce(screen, new_postion);
-        if self.left_player_has_lost_ball(screen) {
-            return Err(GameOver::RightWins);
-        } else if self.right_player_has_lost_ball(screen) {
-            return Err(GameOver::LeftWins);
+        if let Some(winner) = self.get_winner(screen) {
+            return Err(winner);
         }
         Ok(*self)
     }
@@ -137,5 +135,14 @@ impl Ball {
     }
     fn invert_vertical_velocity(&mut self) {
         self.velocity.vy *= -1;
+    }
+
+    fn get_winner(&self, screen: &Rectangle) -> Option<GameOver> {
+        if self.left_player_has_lost_ball(screen) {
+            return Some(GameOver::RightWins);
+        } else if self.right_player_has_lost_ball(screen) {
+            return Some(GameOver::LeftWins);
+        }
+        None
     }
 }
