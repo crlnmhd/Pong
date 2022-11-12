@@ -83,14 +83,6 @@ impl Game {
     pub fn builder() -> GameBuilder {
         GameBuilder::default()
     }
-    pub fn valid_board(&self) -> bool {
-        true
-        //         for object in self.on_screen_objects(){
-        //             match object{
-        //                 Paddle { top_left_pos, x_size, y_size, has_moved } =>
-        //             }
-        //         }
-    }
 
     fn on_screen_objects(&mut self) -> Vec<DrawableGameOject, 3> {
         let mut objects: Vec<DrawableGameOject, 3> = Vec::new();
