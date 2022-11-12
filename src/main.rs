@@ -34,6 +34,8 @@ use cortex_m_rt::{entry, exception};
 use embedded_graphics::primitives::PrimitiveStyle;
 use embedded_graphics::{draw_target::DrawTarget, pixelcolor::Rgb565, prelude::*};
 
+use game::graphics::Display;
+use game::graphics::Graphics;
 use st7735_lcd::{Orientation, ST7735};
 
 use hal::prelude::*;
@@ -125,7 +127,8 @@ fn main() -> ! {
         .initial_ball_velocity(Velocity { vx: 1, vy: 1 })
         .build();
 
-    play(pong, disp, user_input);
+    let graphics = Display { display: &mut disp };
+    play(pong, graphics, user_input);
 }
 
 // TODO: create a wrapper for the display and user input to hopefully avoid the generics.
@@ -139,34 +142,18 @@ fn play<
     const NR: u8,
 >(
     mut game: Game,
-    mut disp: ST7735<SPI, DC, RST>,
+    mut display: Display<SPI, DC, RST>,
     mut user_input: TwoUserInputs<PL, PR, NL, NR>,
 ) -> !
 where
     Pin<PL, NL, Analog>: Channel<ADC1, ID = u8>, // Pins must be capable on analog read by ADC1.
     Pin<PR, NR, Analog>: Channel<ADC1, ID = u8>,
 {
+    let mut on_screen_objects = game.get_content_to_display();
     game.start_new_game();
     loop {
-        disp.clear(Rgb565::BLACK).unwrap();
-        // re draw objects
-        for shape in game.get_content_to_display().into_iter() {
-            match shape {
-                ScreenObject::Rectangle(rectangle) => {
-                    rectangle
-                        .into_styled(PrimitiveStyle::with_fill(Rgb565::YELLOW))
-                        .draw(&mut disp)
-                        .unwrap();
-                }
-                ScreenObject::Circle(circle) => {
-                    circle
-                        .into_styled(PrimitiveStyle::with_fill(Rgb565::GREEN))
-                        .draw(&mut disp)
-                        .unwrap();
-                }
-            }
-        }
         game.reset_position_update_indicators();
+        display.clear(&on_screen_objects);
 
         for player_side in [LeftRightPosition::Left, LeftRightPosition::Right].iter() {
             game.move_paddle(player_side, user_input.get_input_direction(player_side));
@@ -178,5 +165,7 @@ where
             };
             game.start_new_game();
         }
+        display.draw(&on_screen_objects);
+        on_screen_objects = game.get_moved_content();
     }
 }
