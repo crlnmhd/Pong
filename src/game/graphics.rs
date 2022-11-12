@@ -1,6 +1,6 @@
 use embedded_graphics::primitives::{Primitive, PrimitiveStyle};
 use embedded_graphics::Drawable;
-use embedded_graphics::{draw_target::DrawTarget, pixelcolor::Rgb565, prelude::*};
+use embedded_graphics::{pixelcolor::Rgb565, prelude::*};
 use heapless::Vec;
 use st7735_lcd::ST7735;
 use stm32f4xx_hal::hal::digital::v2::OutputPin;
@@ -8,7 +8,6 @@ use stm32f4xx_hal::hal::digital::v2::OutputPin;
 use super::game_objects::ScreenObject;
 use hal::hal::blocking::spi;
 
-use hal::prelude::*;
 use stm32f4xx_hal as hal;
 /*
 *

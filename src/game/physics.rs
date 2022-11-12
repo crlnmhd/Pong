@@ -1,9 +1,6 @@
 use embedded_graphics::{prelude::Point, primitives::Rectangle};
 
-use super::{
-    game_objects::{paddle::Paddle, GameOver},
-    input::LeftRightPosition,
-};
+use super::game_objects::paddle::Paddle;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Velocity {

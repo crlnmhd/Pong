@@ -4,15 +4,11 @@ use embedded_graphics::{
 };
 use heapless::Vec;
 
-use crate::game::{
-    input::LeftRightPosition,
-    physics::{MovingObject, Velocity},
-};
+use crate::game::physics::{MovingObject, Velocity};
 
 use super::{
     super::physics::{BouncableObject, TimeTick},
     paddle::Paddle,
-    GameOver, GameState,
 };
 
 use super::{GameObject, ScreenObject};

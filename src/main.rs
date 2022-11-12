@@ -2,14 +2,14 @@
 #![no_main]
 
 use cortex_m;
-
-use cortex_m::delay;
 use cortex_m::delay::Delay;
+
 use cortex_m_semihosting::hprintln;
 use game::input::LeftRightPosition;
 use game::input::TwoUserInputs;
+use game::physics::TimeTick;
 use game::physics::Velocity;
-use game::physics::{MovingObject, TimeTick};
+use hal::adc::config::AdcConfig;
 use hal::gpio::Analog;
 use hal::gpio::Pin;
 use hal::hal::adc::Channel;
@@ -19,21 +19,14 @@ use hal::pac::ADC1;
 use hal::serial::config::WordLength;
 use stm32f4xx_hal as hal;
 
-use game::input::InpuDirection;
-
-use hal::adc::{config::AdcConfig, config::SampleTime, Adc};
-use hal::pac::USART2;
+use hal::adc::Adc;
 use hal::serial;
-use hal::serial::Rx;
-use hal::serial::Tx;
 use hal::spi::Mode;
 use hal::spi::Phase;
 use hal::spi::Polarity;
 use panic_semihosting as _;
 
-use cortex_m_rt::ExceptionFrame;
-use cortex_m_rt::{entry, exception};
-use embedded_graphics::primitives::PrimitiveStyle;
+use cortex_m_rt::entry;
 use embedded_graphics::{draw_target::DrawTarget, pixelcolor::Rgb565, prelude::*};
 
 use game::graphics::Display;

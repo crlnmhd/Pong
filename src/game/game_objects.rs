@@ -9,11 +9,9 @@ use heapless::Vec;
 
 use ball::Ball;
 use paddle::Paddle;
-use stm32f4xx_hal::dma::traits::Direction;
 
 use super::input::InpuDirection;
 use super::input::LeftRightPosition;
-use super::physics;
 use super::physics::BouncableObject;
 use super::physics::MovingObject;
 use super::physics::TimeTick;
