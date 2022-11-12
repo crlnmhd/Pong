@@ -53,16 +53,6 @@ fn main() -> ! {
     /* set up UART*/
     let mut serial_config = serial::Config::default();
     serial_config.wordlength = WordLength::DataBits8;
-    let serial_config = serial_config;
-
-    let tx = gpioa.pa2.into_alternate::<7>();
-    let rx = gpioa.pa3.into_alternate::<7>();
-
-    let serial_port = serial::Serial2::new(dp.USART2, (tx, rx), serial_config, &clocks)
-        .unwrap()
-        .with_u8_data();
-
-    let (mut tx, mut rx) = serial_port.split();
 
     /* Set up for ST7735*/
     let sck = gpioa.pa5.into_alternate::<5>();
