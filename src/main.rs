@@ -3,6 +3,8 @@
 
 use cortex_m;
 
+use cortex_m::delay;
+use cortex_m::delay::Delay;
 use cortex_m_semihosting::hprintln;
 use game::input::LeftRightPosition;
 use game::input::TwoUserInputs;
@@ -128,7 +130,7 @@ fn main() -> ! {
         .build();
 
     let graphics = Display { display: &mut disp };
-    play(pong, graphics, user_input);
+    play(pong, graphics, user_input, delay);
 }
 
 // TODO: create a wrapper for the display and user input to hopefully avoid the generics.
@@ -144,6 +146,7 @@ fn play<
     mut game: Game,
     mut display: Display<SPI, DC, RST>,
     mut user_input: TwoUserInputs<PL, PR, NL, NR>,
+    mut delay: Delay,
 ) -> !
 where
     Pin<PL, NL, Analog>: Channel<ADC1, ID = u8>, // Pins must be capable on analog read by ADC1.
@@ -152,8 +155,9 @@ where
     let mut on_screen_objects = game.get_content_to_display();
     game.start_new_game();
     loop {
-        game.reset_position_update_indicators();
         display.clear(&on_screen_objects);
+        on_screen_objects = game.get_content_to_display();
+        display.draw(&on_screen_objects);
 
         for player_side in [LeftRightPosition::Left, LeftRightPosition::Right].iter() {
             game.move_paddle(player_side, user_input.get_input_direction(player_side));
@@ -165,7 +169,6 @@ where
             };
             game.start_new_game();
         }
-        display.draw(&on_screen_objects);
-        on_screen_objects = game.get_moved_content();
+        delay.delay_ms(15);
     }
 }
