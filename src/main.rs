@@ -82,9 +82,9 @@ fn main() -> ! {
 
     let left_player_input = gpioa.pa4.into_analog();
     let right_player_input = gpioa.pa1.into_analog();
-    let mut adc1 = Adc::adc1(dp.ADC1, false, AdcConfig::default());
+    let adc1 = Adc::adc1(dp.ADC1, false, AdcConfig::default());
 
-    let mut user_input = TwoUserInputs {
+    let user_input = TwoUserInputs {
         left_user: left_player_input,
         right_user: right_player_input,
         adc1,
@@ -102,7 +102,7 @@ fn main() -> ! {
         time_step: 1,
     };
 
-    let mut pong: Game = GameBuilder::new(x_pixels, y_pixels)
+    let pong: Game = GameBuilder::new(x_pixels, y_pixels)
         .ball_radius(3)
         .paddle_size(Size {
             width: paddle_width,
